@@ -10,13 +10,14 @@ import { UpgradesPanel } from './components/UpgradesPanel';
 const App: React.FC = () => {
   const { gameState, setGameState } = useGameLoop();
 
+  // Targeting Mode Keyboard Controls
   useEffect(() => {
     if (!gameState.targetingMode) return;
 
     const moveSpeed = 15;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === 'Escape' || e.key === 'x') {
         setGameState(g => ({ ...g, targetingMode: false, activeStratagemId: null, battlefeed: [...g.battlefeed, 'Targeting aborted.'] }));
         return;
       }
@@ -69,6 +70,63 @@ const App: React.FC = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [gameState.targetingMode, setGameState]);
+
+  // Stratagem Input Keyboard Loop
+  useEffect(() => {
+    if (gameState.targetingMode) return; // Don't process stratagem inputs while targeting
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+        let inputArrow: 'UP' | 'DOWN' | 'LEFT' | 'RIGHT' | null = null;
+        if (e.key === 'ArrowUp') inputArrow = 'UP';
+        if (e.key === 'ArrowDown') inputArrow = 'DOWN';
+        if (e.key === 'ArrowLeft') inputArrow = 'LEFT';
+        if (e.key === 'ArrowRight') inputArrow = 'RIGHT';
+
+        if (e.key === 'x') {
+            setGameState(g => ({ ...g, activeStratagemId: null, activeStratagemInputId: null, activeSequence: [], targetSequence: null }));
+            return;
+        }
+
+        if (inputArrow) {
+             setGameState(g => {
+                if (!g.activeStratagemInputId) return g;
+
+                const strat = g.stratagems.find(s => s.id === g.activeStratagemInputId);
+                if (!strat || strat.readyAt > Date.now()) return g; // Cooldown check
+
+                const currentSeqIndex = g.activeSequence.length;
+                const expectedArrow = strat.code[currentSeqIndex];
+
+                if (inputArrow === expectedArrow) {
+                    const newSequence = [...g.activeSequence, inputArrow];
+
+                    if (newSequence.length === strat.code.length) {
+                        // Sequence complete!
+                        return {
+                            ...g,
+                            activeSequence: [],
+                            activeStratagemInputId: null,
+                            targetSequence: null,
+                            targetingMode: true,
+                            activeStratagemId: strat.id,
+                            battlefeed: [...g.battlefeed, `STRATAGEM CODED: ${strat.name.toUpperCase()}`]
+                        };
+                    } else {
+                        // Correct input, wait for next
+                        return { ...g, activeSequence: newSequence };
+                    }
+                } else {
+                    // Wrong input, reset
+                    return { ...g, activeSequence: [], battlefeed: [...g.battlefeed, 'INPUT ERROR: SEQUENCE RESET'] };
+                }
+             });
+        }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [gameState.targetingMode, setGameState]);
+
 
   return (
     <div className="w-screen h-screen bg-[#050505] bg-grid-pattern relative overflow-hidden font-rajdhani select-none crt-overlay">

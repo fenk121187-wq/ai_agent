@@ -138,7 +138,6 @@ export const StratagemInput: React.FC<StratagemInputProps> = ({ gameState, setGa
     : 82; // Default decorative percentage
 
   const circumference = 2 * Math.PI * 20;
-  const strokeDashoffset = circumference - (timeRemaining / 100) * circumference;
 
   return (
     <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col z-50 pointer-events-none font-rajdhani">

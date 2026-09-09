@@ -6,19 +6,19 @@ export const MAP_HEIGHT = 1500;
 export const generateInitialState = (): GameState => {
   return {
     helldivers: [
-      { id: 'h1', name: 'H-1', position: { x: 500, y: 700 }, health: 100, ammo: 100, isDead: false, isEngaged: false },
-      { id: 'h2', name: 'H-2', position: { x: 520, y: 720 }, health: 100, ammo: 100, isDead: false, isEngaged: false },
-      { id: 'h3', name: 'H-3', position: { x: 480, y: 740 }, health: 100, ammo: 100, isDead: false, isEngaged: false },
-      { id: 'h4', name: 'H-4', position: { x: 550, y: 680 }, health: 100, ammo: 100, isDead: false, isEngaged: false },
+      { id: 'h1', name: 'H-1', position: { x: 1000, y: 750 }, health: 100, ammo: 100, isDead: false, isEngaged: false },
+      { id: 'h2', name: 'H-2', position: { x: 1020, y: 770 }, health: 100, ammo: 100, isDead: false, isEngaged: false },
+      { id: 'h3', name: 'H-3', position: { x: 980, y: 790 }, health: 100, ammo: 100, isDead: false, isEngaged: false },
+      { id: 'h4', name: 'H-4', position: { x: 1050, y: 730 }, health: 100, ammo: 100, isDead: false, isEngaged: false },
     ],
     enemies: Array.from({ length: 15 }).map((_, i) => ({
       id: `e${i}`,
-      position: { x: 800 + Math.random() * 600, y: 400 + Math.random() * 600 },
+      position: { x: 1200 + Math.random() * 500, y: 600 + Math.random() * 500 },
       health: 100,
     })),
     civilians: Array.from({ length: 8 }).map((_, i) => ({
       id: `c${i}`,
-      position: { x: 450 + Math.random() * 200, y: 650 + Math.random() * 200 },
+      position: { x: 850 + Math.random() * 200, y: 700 + Math.random() * 200 },
       health: 100,
       isDead: false,
     })),
@@ -50,5 +50,9 @@ export const generateInitialState = (): GameState => {
     targetingMode: false,
     targetingPosition: { x: MAP_WIDTH / 2, y: MAP_HEIGHT / 2 },
     battlefeed: ['Deployment successful.', 'Awaiting command.'],
+    mapMarkers: [],
+    activeSequence: [],
+    targetSequence: null,
+    activeStratagemInputId: null
   };
 };

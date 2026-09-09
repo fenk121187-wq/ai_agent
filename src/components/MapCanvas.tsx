@@ -4,11 +4,37 @@ import { MAP_WIDTH, MAP_HEIGHT } from '../initialState';
 
 interface MapCanvasProps {
   gameState: GameState;
+  setGameState?: React.Dispatch<React.SetStateAction<GameState>>;
 }
 
-export const MapCanvas: React.FC<MapCanvasProps> = ({ gameState }) => {
+export const MapCanvas: React.FC<MapCanvasProps> = ({ gameState, setGameState }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fowCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!canvasRef.current) return;
+    if (gameState.targetingMode) return; // Prevent spawning markers when aiming stratagem
+
+    const rect = canvasRef.current.getBoundingClientRect();
+
+    // Calculate click position relative to the scaled canvas
+    // We assume the map is scaled and centered using transform
+    const scaleX = MAP_WIDTH / rect.width;
+    const scaleY = MAP_HEIGHT / rect.height;
+
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
+
+    if (setGameState) {
+        setGameState(prev => ({
+            ...prev,
+            mapMarkers: [
+                ...(prev.mapMarkers || []),
+                { x, y, id: Date.now().toString(), createdAt: Date.now() }
+            ]
+        }));
+    }
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -23,12 +49,76 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({ gameState }) => {
     // --- RENDER ENTITIES LAYER ---
     ctx.clearRect(0, 0, MAP_WIDTH, MAP_HEIGHT);
 
-    // Dark map background texture base
-    ctx.fillStyle = '#05070a'; // Darker, more contrast
+    // Detailed Topographical Map Background
+    ctx.fillStyle = '#1e242a'; // Deep tactical grey-blue base
     ctx.fillRect(0, 0, MAP_WIDTH, MAP_HEIGHT);
 
-    // Draw Tactical Grid
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+    // Procedural Topography Lines (Simulated using layered arcs/curves)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 20; i++) {
+        ctx.beginPath();
+        const startX = Math.random() * MAP_WIDTH;
+        const startY = Math.random() * MAP_HEIGHT;
+        ctx.moveTo(startX, startY);
+        for(let j = 0; j < 5; j++) {
+            ctx.quadraticCurveTo(
+                startX + (Math.random() - 0.5) * 400, startY + (Math.random() - 0.5) * 400,
+                startX + (Math.random() - 0.5) * 600, startY + (Math.random() - 0.5) * 600
+            );
+        }
+        ctx.stroke();
+    }
+
+    // Environmental Structures (Outposts / Buildings)
+    ctx.fillStyle = '#11151a';
+    ctx.strokeStyle = '#2a333c';
+    ctx.lineWidth = 2;
+
+    const buildings = [
+        {x: 400, y: 300, w: 120, h: 80},
+        {x: 420, y: 380, w: 80, h: 60},
+        {x: 1200, y: 700, w: 150, h: 100},
+        {x: 1100, y: 750, w: 100, h: 120},
+        {x: 800, y: 1100, w: 200, h: 90},
+    ];
+
+    buildings.forEach(b => {
+        // Main structure
+        ctx.fillRect(b.x, b.y, b.w, b.h);
+        ctx.strokeRect(b.x, b.y, b.w, b.h);
+
+        // Inner roof detail
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.strokeRect(b.x + 10, b.y + 10, b.w - 20, b.h - 20);
+
+        // Helipad / Marking
+        ctx.beginPath();
+        ctx.arc(b.x + b.w/2, b.y + b.h/2, Math.min(b.w, b.h)/3, 0, Math.PI*2);
+        ctx.stroke();
+    });
+
+    // Craters / Rough Terrain
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
+    for(let i=0; i<30; i++) {
+        ctx.beginPath();
+        const cx = Math.random() * MAP_WIDTH;
+        const cy = Math.random() * MAP_HEIGHT;
+        const r = 20 + Math.random() * 40;
+        ctx.arc(cx, cy, r, 0, Math.PI*2);
+        ctx.lineWidth = 1 + Math.random() * 3;
+        ctx.stroke();
+
+        // Inner crater shadow
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+        ctx.beginPath();
+        ctx.arc(cx - r*0.2, cy - r*0.2, r*0.6, 0, Math.PI*2);
+        ctx.fill();
+    }
+
+
+    // Draw Tactical Grid OVER terrain
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
     ctx.lineWidth = 1;
     ctx.beginPath();
     for (let x = 0; x <= MAP_WIDTH; x += 100) {
@@ -273,6 +363,30 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({ gameState }) => {
     ctx.globalCompositeOperation = 'source-over';
 
 
+    // --- RENDER DYNAMIC MARKERS ---
+    if (gameState.mapMarkers) {
+        const now = Date.now();
+        gameState.mapMarkers.forEach(marker => {
+            const age = now - marker.createdAt;
+            if (age < 3000) { // 3 seconds lifespan
+                const progress = age / 3000;
+                const radius = 20 + (progress * 100);
+                const opacity = 1 - progress;
+
+                ctx.beginPath();
+                ctx.arc(marker.x, marker.y, radius, 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(255, 153, 0, ${opacity})`;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.arc(marker.x, marker.y, 5, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 153, 0, ${opacity})`;
+                ctx.fill();
+            }
+        });
+    }
+
     // --- TARGETING RETICLE OVERLAY ---
     if (gameState.targetingMode) {
         const strat = gameState.stratagems.find(s => s.id === gameState.activeStratagemId);
@@ -322,12 +436,13 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({ gameState }) => {
         {/* CRT Scanline Overlay */}
         <div className="absolute inset-0 z-30 opacity-10 pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'repeating-linear-gradient(transparent, transparent 2px, rgba(0,0,0,0.8) 2px, rgba(0,0,0,0.8) 4px)' }} />
 
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" style={{ width: MAP_WIDTH, height: MAP_HEIGHT, transform: 'scale(1)' }}>
+        <div className="absolute left-1/2 top-1/2" style={{ width: MAP_WIDTH, height: MAP_HEIGHT, transform: 'translate(-50%, -50%) scale(1)' }}>
             <canvas
             ref={canvasRef}
             width={MAP_WIDTH}
             height={MAP_HEIGHT}
-            className="absolute inset-0 z-0 mix-blend-screen"
+            onClick={handleCanvasClick}
+            className="absolute inset-0 z-0 mix-blend-screen cursor-crosshair"
             />
             <canvas
             ref={fowCanvasRef}

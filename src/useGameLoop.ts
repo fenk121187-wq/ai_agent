@@ -202,8 +202,24 @@ export const useGameLoop = () => {
           }
       }
 
+      // Random Tactical Logs for Battlefeed
+      if (Math.random() < dt * 0.2) {
+          const genericLogs = [
+              "Scanning sector...",
+              "Orbital telemetry updated.",
+              "Signal strength nominal.",
+              "Analyzing enemy movement.",
+              "Atmospheric interference detected."
+          ];
+          newBattlefeedMsgs.push(genericLogs[Math.floor(Math.random() * genericLogs.length)]);
+      }
+
       if (newBattlefeedMsgs.length > 0) {
           next.battlefeed = [...next.battlefeed, ...newBattlefeedMsgs];
+          // Limit battlefeed size
+          if (next.battlefeed.length > 20) {
+              next.battlefeed = next.battlefeed.slice(next.battlefeed.length - 20);
+          }
       }
 
       return next;

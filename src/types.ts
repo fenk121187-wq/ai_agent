@@ -56,6 +56,13 @@ export interface Upgrades {
   cooldownReduction: number; // level 0-5
 }
 
+export interface MapMarker {
+  id: string;
+  x: number;
+  y: number;
+  createdAt: number;
+}
+
 export interface GameState {
   helldivers: Helldiver[];
   enemies: Enemy[];
@@ -75,4 +82,8 @@ export interface GameState {
   targetingMode: boolean;
   targetingPosition: Position;
   battlefeed: string[];
+  mapMarkers: MapMarker[];
+  activeSequence: string[];
+  targetSequence: string[] | null;
+  activeStratagemInputId: string | null;
 }
