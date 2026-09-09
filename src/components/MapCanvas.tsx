@@ -22,9 +22,24 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({ gameState }) => {
 
     // --- RENDER ENTITIES LAYER ---
     ctx.clearRect(0, 0, MAP_WIDTH, MAP_HEIGHT);
+
     // Dark map background texture base
-    ctx.fillStyle = '#0a0d14';
+    ctx.fillStyle = '#05070a'; // Darker, more contrast
     ctx.fillRect(0, 0, MAP_WIDTH, MAP_HEIGHT);
+
+    // Draw Tactical Grid
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let x = 0; x <= MAP_WIDTH; x += 100) {
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, MAP_HEIGHT);
+    }
+    for (let y = 0; y <= MAP_HEIGHT; y += 100) {
+      ctx.moveTo(0, y);
+      ctx.lineTo(MAP_WIDTH, y);
+    }
+    ctx.stroke();
 
     // Engagement Lines (Dashed red laser effect terminating in diamonds)
     gameState.helldivers.forEach(hd => {
@@ -70,29 +85,28 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({ gameState }) => {
         });
     });
 
-    // Render Enemies (Glowing Red Diamonds - visible in fog handled later, but drawn here)
+    // Render Enemies (Glowing Red Triangles / Bug marks - visible in fog handled later, but drawn here)
     gameState.enemies.forEach(enemy => {
         if (enemy.health <= 0) return;
 
-        ctx.shadowBlur = 12;
-        ctx.shadowColor = '#ff0000';
-        ctx.fillStyle = '#ff2222';
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = '#ff0033';
+        ctx.fillStyle = '#ff1133';
 
+        // Sharp triangle facing down/center
         ctx.beginPath();
-        ctx.moveTo(enemy.position.x, enemy.position.y - 8);
-        ctx.lineTo(enemy.position.x + 8, enemy.position.y);
-        ctx.lineTo(enemy.position.x, enemy.position.y + 8);
-        ctx.lineTo(enemy.position.x - 8, enemy.position.y);
+        ctx.moveTo(enemy.position.x, enemy.position.y - 6);
+        ctx.lineTo(enemy.position.x + 6, enemy.position.y + 6);
+        ctx.lineTo(enemy.position.x - 6, enemy.position.y + 6);
         ctx.closePath();
         ctx.fill();
 
         // Inner bright core
         ctx.fillStyle = '#ffffff';
         ctx.beginPath();
-        ctx.moveTo(enemy.position.x, enemy.position.y - 3);
-        ctx.lineTo(enemy.position.x + 3, enemy.position.y);
-        ctx.lineTo(enemy.position.x, enemy.position.y + 3);
-        ctx.lineTo(enemy.position.x - 3, enemy.position.y);
+        ctx.moveTo(enemy.position.x, enemy.position.y - 1);
+        ctx.lineTo(enemy.position.x + 2, enemy.position.y + 3);
+        ctx.lineTo(enemy.position.x - 2, enemy.position.y + 3);
         ctx.closePath();
         ctx.fill();
 
@@ -139,14 +153,21 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({ gameState }) => {
     gameState.helldivers.forEach(hd => {
       if (hd.isDead) return;
 
-      // Hexagon icon background
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = '#0088ff';
-      ctx.strokeStyle = '#00bfff';
+      // Directional Vision Arc Hint
+      ctx.beginPath();
+      ctx.arc(hd.position.x, hd.position.y, 30, -Math.PI*0.8, -Math.PI*0.2);
+      ctx.strokeStyle = 'rgba(0, 240, 255, 0.3)';
       ctx.lineWidth = 2;
-      ctx.fillStyle = 'rgba(0, 191, 255, 0.1)';
+      ctx.stroke();
 
-      const size = 14;
+      // Hexagon icon background
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = '#00f0ff';
+      ctx.strokeStyle = '#00f0ff';
+      ctx.lineWidth = 2;
+      ctx.fillStyle = 'rgba(0, 240, 255, 0.15)';
+
+      const size = 16;
       ctx.beginPath();
       for (let i = 0; i < 6; i++) {
         const angle = (Math.PI / 3) * i - Math.PI/2;
@@ -159,30 +180,47 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({ gameState }) => {
       ctx.fill();
       ctx.stroke();
 
-      // Inner dot/icon
+      // Inner chevron
       ctx.fillStyle = '#ffffff';
-      ctx.shadowBlur = 5;
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = '#ffffff';
       ctx.beginPath();
-      ctx.arc(hd.position.x, hd.position.y, 4, 0, Math.PI * 2);
+      ctx.moveTo(hd.position.x, hd.position.y - 6);
+      ctx.lineTo(hd.position.x + 6, hd.position.y + 4);
+      ctx.lineTo(hd.position.x, hd.position.y + 2);
+      ctx.lineTo(hd.position.x - 6, hd.position.y + 4);
+      ctx.closePath();
       ctx.fill();
       ctx.shadowBlur = 0;
 
-      // Draw Name tag (H-1 HELLDIVER)
-      ctx.fillStyle = '#ffffff';
+      // Draw Name tag
+      ctx.fillStyle = '#00f0ff';
       ctx.font = 'bold 12px "Rajdhani", sans-serif';
       ctx.textAlign = 'center';
+      (ctx as any).letterSpacing = '1px'; // Handle type check gracefully
 
       ctx.fillText(hd.name, hd.position.x, hd.position.y - 35);
-      ctx.fillText("HELLDIVER", hd.position.x, hd.position.y - 20);
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+      ctx.font = '10px "Rajdhani", sans-serif';
+      ctx.fillText("HELLDIVER", hd.position.x, hd.position.y - 22);
+      (ctx as any).letterSpacing = '0px';
     });
 
     // --- RENDER FOG OF WAR LAYER ---
     fowCtx.globalCompositeOperation = 'source-over';
     fowCtx.clearRect(0, 0, MAP_WIDTH, MAP_HEIGHT);
 
-    // Create a smoky/cloudy background look by layering some opacity (simplified)
-    fowCtx.fillStyle = 'rgba(10, 15, 20, 0.95)';
+    // Create a deeply atmospheric smoky/cloudy background
+    // We'll use a very dark blue/black base to match a premium tactical map
+    fowCtx.fillStyle = 'rgba(4, 7, 12, 0.98)';
     fowCtx.fillRect(0, 0, MAP_WIDTH, MAP_HEIGHT);
+
+    // Overlay scanlines on the fog itself before cutting it out
+    fowCtx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+    for (let y = 0; y < MAP_HEIGHT; y += 4) {
+      fowCtx.fillRect(0, y, MAP_WIDTH, 1);
+    }
 
     fowCtx.globalCompositeOperation = 'destination-out';
 
@@ -208,22 +246,29 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({ gameState }) => {
         }
     });
 
-    // Add blue edge glow to the cutouts by drawing over them on the main canvas
+    // Add glowing tech edge to the cutouts by drawing over them on the main canvas
     ctx.globalCompositeOperation = 'screen';
     gameState.helldivers.forEach(hd => {
         if (hd.isDead) return;
         const gradient = ctx.createRadialGradient(
-            hd.position.x, hd.position.y, 180,
+            hd.position.x, hd.position.y, 150,
             hd.position.x, hd.position.y, 250
         );
-        gradient.addColorStop(0, 'rgba(0, 150, 255, 0)');
-        gradient.addColorStop(0.8, 'rgba(0, 150, 255, 0.15)');
-        gradient.addColorStop(1, 'rgba(0, 150, 255, 0)');
+        gradient.addColorStop(0, 'rgba(0, 240, 255, 0)');
+        gradient.addColorStop(0.9, 'rgba(0, 240, 255, 0.1)');
+        gradient.addColorStop(1, 'rgba(0, 240, 255, 0)');
 
         ctx.fillStyle = gradient;
         ctx.beginPath();
         ctx.arc(hd.position.x, hd.position.y, 250, 0, Math.PI*2);
         ctx.fill();
+
+        // A faint inner ring for tactical feel
+        ctx.beginPath();
+        ctx.arc(hd.position.x, hd.position.y, 150, 0, Math.PI*2);
+        ctx.strokeStyle = 'rgba(0, 240, 255, 0.05)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
     });
     ctx.globalCompositeOperation = 'source-over';
 
@@ -269,10 +314,13 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({ gameState }) => {
   }, [gameState]);
 
   return (
-    <div className="absolute inset-0 overflow-hidden bg-zinc-950 flex items-center justify-center pointer-events-none">
+    <div className="absolute inset-0 overflow-hidden bg-[#030508] flex items-center justify-center pointer-events-none">
       <div className="relative w-full h-full">
-        {/* Background smoky texture simulation */}
-        <div className="absolute inset-0 bg-cover bg-center opacity-30" style={{ backgroundImage: 'radial-gradient(circle at center, transparent 0%, #000 100%)' }} />
+        {/* Deep map vignette */}
+        <div className="absolute inset-0 bg-cover bg-center z-20 opacity-80" style={{ backgroundImage: 'radial-gradient(circle at center, transparent 30%, #000 100%)' }} />
+
+        {/* CRT Scanline Overlay */}
+        <div className="absolute inset-0 z-30 opacity-10 pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'repeating-linear-gradient(transparent, transparent 2px, rgba(0,0,0,0.8) 2px, rgba(0,0,0,0.8) 4px)' }} />
 
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" style={{ width: MAP_WIDTH, height: MAP_HEIGHT, transform: 'scale(1)' }}>
             <canvas

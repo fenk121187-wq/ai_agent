@@ -1,2 +1,9 @@
+
+  VITE v8.2.2  ready in 918 ms
+
   ➜  Local:   http://localhost:4174/
   ➜  Network: use --host to expose
+6:33:06 PM [vite] (client) hmr update /src/components/LeftPanel.tsx, /src/index.css
+6:34:17 PM [vite] (client) hmr update /src/components/RightPanel.tsx, /src/index.css
+6:35:24 PM [vite] (client) hmr update /src/components/StratagemInput.tsx, /src/index.css
+6:37:28 PM [vite] (client) hmr update /src/components/MapCanvas.tsx, /src/index.css
