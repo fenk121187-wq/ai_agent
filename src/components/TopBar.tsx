@@ -20,29 +20,40 @@ export const TopBar: React.FC<TopBarProps> = ({ gameState }) => {
         </div>
 
         <div className="flex items-center space-x-4 mt-2">
-            <span className="text-zinc-400 font-bold uppercase tracking-widest text-xs">DAY 132</span>
-            <span className="text-zinc-300 font-mono tracking-widest text-sm">07:46:19 GST</span>
+            <span className="text-zinc-400 font-bold uppercase tracking-widest text-xs">TIME REMAINING</span>
+            <span className="text-zinc-300 font-mono tracking-widest text-sm drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]">
+                {Math.floor(gameState.missionTimeLeft / 60).toString().padStart(2, '0')}:
+                {Math.floor(gameState.missionTimeLeft % 60).toString().padStart(2, '0')}
+            </span>
         </div>
       </div>
 
       {/* The 3 Main Top Panels */}
-      <div className="flex justify-between items-stretch mt-6 space-x-4 w-full">
+      <div className="flex justify-between items-stretch mt-6 w-full">
 
         {/* Panel 1: Mission Objectives */}
-        <div className="tech-panel flex-1">
+        <div className="tech-panel w-72 shrink-0">
             <div className="tech-panel-inner">
                 <h3 className="text-helldiver-gold font-bold uppercase mb-3 tracking-widest text-sm border-b border-helldiver-orange/20 pb-1 w-full">Mission Objectives</h3>
                 <div className="space-y-1.5 w-full">
-                    <div className="flex items-center text-xs tracking-wider uppercase font-bold">
-                        <span className="text-zinc-500 mr-2 text-[10px]">■</span>
-                        <span className="text-zinc-300 flex-1">Evacuate Civilians</span>
-                        <span className="text-red-500 font-mono">[ 0 / 512 ]</span>
-                    </div>
-                    <div className="flex items-center text-xs tracking-wider uppercase font-bold">
-                        <span className="text-zinc-500 mr-2 text-[10px]">■</span>
-                        <span className="text-zinc-300 flex-1">Eliminate High-Value Targets</span>
-                        <span className="text-zinc-500 font-mono">[ 3 / 7 ]</span>
-                    </div>
+                    {gameState.objectives.map((obj, idx) => {
+                        let colorClass = "text-zinc-500";
+                        let progressText = `[ ${obj.progress} / ${obj.max} ]`;
+                        if (obj.progress >= obj.max) {
+                            colorClass = "text-green-500 drop-shadow-[0_0_5px_rgba(34,197,94,0.5)]";
+                            progressText = "[ SECURED ]";
+                        } else if (idx === 0) {
+                            colorClass = "text-red-500"; // Critical objective
+                        }
+
+                        return (
+                            <div key={obj.id} className="flex items-center text-xs tracking-wider uppercase font-bold">
+                                <span className="text-zinc-500 mr-2 text-[10px]">■</span>
+                                <span className="text-zinc-300 flex-1">{obj.name}</span>
+                                <span className={`${colorClass} font-mono`}>{progressText}</span>
+                            </div>
+                        );
+                    })}
                     <div className="flex items-center text-xs tracking-wider uppercase font-bold">
                         <span className="text-zinc-500 mr-2 text-[10px]">■</span>
                         <span className="text-zinc-300 flex-1">Hold Extraction Zone</span>
@@ -53,7 +64,7 @@ export const TopBar: React.FC<TopBarProps> = ({ gameState }) => {
         </div>
 
         {/* Panel 2: Sacrifice Score */}
-        <div className="tech-panel flex-1 flex flex-col items-center justify-center text-center">
+        <div className="tech-panel w-80 shrink-0 flex flex-col items-center justify-center text-center mx-4">
             <div className="tech-panel-inner flex flex-col items-center justify-center pt-2">
                 <span className="text-zinc-400 uppercase tracking-widest text-xs font-bold mb-1">Sacrifice Score</span>
                 <span className="text-5xl font-black text-helldiver-orange font-mono drop-shadow-[0_0_15px_rgba(255,153,0,0.4)] leading-none mb-1">
@@ -66,7 +77,7 @@ export const TopBar: React.FC<TopBarProps> = ({ gameState }) => {
         </div>
 
         {/* Panel 3: Mission Rating */}
-        <div className="tech-panel flex-1 flex flex-col items-center justify-center text-center">
+        <div className="tech-panel w-72 shrink-0 flex flex-col items-center justify-center text-center">
             <div className="tech-panel-inner flex flex-col items-center justify-center">
                 <span className="text-zinc-400 uppercase tracking-widest text-xs font-bold mb-2">Mission Rating</span>
                 <span className="text-5xl font-black text-helldiver-gold font-mono drop-shadow-[0_0_15px_rgba(255,193,7,0.4)] leading-none mb-3">

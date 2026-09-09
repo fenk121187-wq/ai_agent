@@ -18,7 +18,7 @@ const StratagemIcon = ({ type }: { type: string }) => {
 
 export const LeftPanel: React.FC<LeftPanelProps> = ({ gameState }) => {
   return (
-    <div className="absolute top-[8.5rem] left-6 w-72 flex flex-col space-y-6 z-50 pointer-events-none font-rajdhani">
+    <div className="w-full flex flex-col space-y-4 font-rajdhani">
 
       {/* Stratagem Feed */}
       <div className="tech-panel">

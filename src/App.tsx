@@ -5,6 +5,8 @@ import { TopBar } from './components/TopBar';
 import { LeftPanel } from './components/LeftPanel';
 import { RightPanel } from './components/RightPanel';
 import { StratagemInput } from './components/StratagemInput';
+import { UpgradesPanel } from './components/UpgradesPanel';
+
 const App: React.FC = () => {
   const { gameState, setGameState } = useGameLoop();
 
@@ -100,7 +102,10 @@ const App: React.FC = () => {
       </div>
 
       <TopBar gameState={gameState} />
-      <LeftPanel gameState={gameState} />
+      <div className="absolute top-[8.5rem] left-6 bottom-[4rem] w-72 flex flex-col space-y-4 z-50 pointer-events-none">
+         <LeftPanel gameState={gameState} />
+         <UpgradesPanel gameState={gameState} setGameState={setGameState} />
+      </div>
       <RightPanel gameState={gameState} />
       <StratagemInput gameState={gameState} setGameState={setGameState} />
 

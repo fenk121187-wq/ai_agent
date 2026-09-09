@@ -65,25 +65,27 @@ export const UpgradesPanel: React.FC<UpgradesPanelProps> = ({ gameState, setGame
   };
 
   return (
-    <div className="absolute bottom-36 left-6 w-72 glass-panel rounded-md p-4 z-50 flex flex-col font-rajdhani border-l-4 border-l-helldiver-orange pointer-events-none">
+    <div className="w-full flex flex-col pointer-events-auto font-rajdhani flex-1 mb-2">
+      <div className="tech-panel h-full">
+        <div className="tech-panel-inner pb-2">
+            <div className="flex justify-between items-center mb-4 border-b border-helldiver-orange/20 pb-1 w-full">
+                <h3 className="text-helldiver-gold font-bold uppercase tracking-widest text-sm">Ship Upgrades</h3>
+                <div className="flex items-center space-x-2 px-2 py-0.5 border border-helldiver-gold/30 bg-black/50">
+                <span className="text-[10px] text-zinc-500 font-bold tracking-widest">SAMPLES</span>
+                <span className="text-helldiver-gold font-bold drop-shadow-[0_0_5px_rgba(255,193,7,0.5)] font-mono">
+                    {gameState.samples}
+                </span>
+                </div>
+            </div>
 
-      <div className="flex justify-between items-center mb-4 border-b border-white/5 pb-2">
-        <h3 className="text-xs text-zinc-400 uppercase tracking-widest font-bold">Ship Upgrades</h3>
-        <div className="flex items-center space-x-2 bg-black/50 px-2 py-0.5 border border-helldiver-gold/30">
-          <span className="text-[10px] text-zinc-500">SAMPLES</span>
-          <span className="text-helldiver-gold font-bold drop-shadow-[0_0_5px_rgba(255,193,7,0.5)] font-mono">
-            {gameState.samples}
-          </span>
+            <div className="overflow-y-auto h-[200px] pr-2 custom-scrollbar">
+                {renderUpgrade('Weapon Systems', 'weaponDamage')}
+                {renderUpgrade('Titanium Armor', 'armorRating')}
+                {renderUpgrade('Sensor Range', 'visionRange')}
+                {renderUpgrade('Orbital Logistics', 'cooldownReduction')}
+            </div>
         </div>
       </div>
-
-      <div className="overflow-y-auto max-h-[300px] pr-2 custom-scrollbar">
-        {renderUpgrade('Weapon Systems', 'weaponDamage')}
-        {renderUpgrade('Titanium Armor', 'armorRating')}
-        {renderUpgrade('Sensor Range', 'visionRange')}
-        {renderUpgrade('Orbital Logistics', 'cooldownReduction')}
-      </div>
-
     </div>
   );
 };
