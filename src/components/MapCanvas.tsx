@@ -172,11 +172,8 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({ gameState }) => {
       ctx.font = 'bold 12px "Rajdhani", sans-serif';
       ctx.textAlign = 'center';
 
-      const parts = hd.name.split(' ');
-      ctx.fillText(parts[0], hd.position.x, hd.position.y - 35);
-      if (parts[1]) {
-        ctx.fillText(parts[1], hd.position.x, hd.position.y - 20);
-      }
+      ctx.fillText(hd.name, hd.position.x, hd.position.y - 35);
+      ctx.fillText("HELLDIVER", hd.position.x, hd.position.y - 20);
     });
 
     // --- RENDER FOG OF WAR LAYER ---

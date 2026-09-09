@@ -6,10 +6,10 @@ export const MAP_HEIGHT = 1500;
 export const generateInitialState = (): GameState => {
   return {
     helldivers: [
-      { id: 'h1', name: 'K1', position: { x: 500, y: 700 }, health: 100, ammo: 100, isDead: false, isEngaged: false },
-      { id: 'h2', name: 'J2', position: { x: 520, y: 720 }, health: 100, ammo: 100, isDead: false, isEngaged: false },
-      { id: 'h3', name: 'L3', position: { x: 480, y: 740 }, health: 100, ammo: 100, isDead: false, isEngaged: false },
-      { id: 'h4', name: 'P4', position: { x: 550, y: 680 }, health: 100, ammo: 100, isDead: false, isEngaged: false },
+      { id: 'h1', name: 'H-1', position: { x: 500, y: 700 }, health: 100, ammo: 100, isDead: false, isEngaged: false },
+      { id: 'h2', name: 'H-2', position: { x: 520, y: 720 }, health: 100, ammo: 100, isDead: false, isEngaged: false },
+      { id: 'h3', name: 'H-3', position: { x: 480, y: 740 }, health: 100, ammo: 100, isDead: false, isEngaged: false },
+      { id: 'h4', name: 'H-4', position: { x: 550, y: 680 }, health: 100, ammo: 100, isDead: false, isEngaged: false },
     ],
     enemies: Array.from({ length: 15 }).map((_, i) => ({
       id: `e${i}`,
