@@ -5,6 +5,7 @@ import { TopBar } from './components/TopBar';
 import { LeftPanel } from './components/LeftPanel';
 import { RightPanel } from './components/RightPanel';
 import { StratagemInput } from './components/StratagemInput';
+import { UpgradesPanel } from './components/UpgradesPanel';
 
 const App: React.FC = () => {
   const { gameState, setGameState } = useGameLoop();
@@ -30,8 +31,11 @@ const App: React.FC = () => {
         if (e.key === 'Enter' || e.key === ' ') {
             const strat = g.stratagems.find(s => s.id === g.activeStratagemId);
             if (strat) {
+                // Apply cooldown reduction upgrade (10% per level)
+                const cdrMultiplier = 1 - (g.upgrades.cooldownReduction * 0.1);
+
                 const updatedStratagems = g.stratagems.map(s =>
-                    s.id === strat.id ? { ...s, readyAt: Date.now() + s.cooldown } : s
+                    s.id === strat.id ? { ...s, readyAt: Date.now() + (s.cooldown * cdrMultiplier) } : s
                 );
 
                 let updatedEnemies = g.enemies;
@@ -67,29 +71,38 @@ const App: React.FC = () => {
   }, [gameState.targetingMode, setGameState]);
 
   return (
-    <div className="w-screen h-screen bg-[#050505] relative overflow-hidden font-mono select-none">
+    <div className="w-screen h-screen bg-[#050505] bg-grid-pattern relative overflow-hidden font-rajdhani select-none crt-overlay">
+      <style>{`
+        @keyframes scan {
+          0% { top: 0%; opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { top: 100%; opacity: 0; }
+        }
+        @keyframes slideIn {
+          from { transform: translateX(10px); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+      `}</style>
 
-      {/* Background Vignette & Grain (Premium feel) */}
+      {/* Background Vignette */}
       <div className="absolute inset-0 pointer-events-none z-0"
            style={{
-               background: 'radial-gradient(circle, rgba(0,0,0,0) 40%, rgba(0,0,0,0.8) 100%)',
-               boxShadow: 'inset 0 0 100px rgba(0,0,0,0.9)'
+               background: 'radial-gradient(circle, rgba(0,0,0,0) 40%, rgba(0,0,0,0.95) 100%)',
            }}
       />
 
-      {/* Main Game Map */}
       <MapCanvas gameState={gameState} />
 
-      {/* HUD Overlays */}
       <TopBar gameState={gameState} />
       <LeftPanel gameState={gameState} />
+      <UpgradesPanel gameState={gameState} setGameState={setGameState} />
       <RightPanel gameState={gameState} />
       <StratagemInput gameState={gameState} setGameState={setGameState} />
 
-      {/* Targeting Status Indicator */}
       {gameState.targetingMode && (
           <div className="absolute bottom-24 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none z-50">
-              <div className="text-red-500 font-bold text-xl uppercase tracking-widest bg-black/90 px-6 py-2 border-2 border-red-500/50 shadow-[0_0_15px_rgba(255,0,0,0.3)] animate-pulse">
+              <div className="text-red-500 font-bold text-xl uppercase tracking-widest bg-black/90 px-6 py-2 border-2 border-red-500/50 shadow-[0_0_15px_rgba(255,0,0,0.3)] animate-pulse glass-panel">
                   Targeting Coordinates [ENTER]
               </div>
               <div className="text-zinc-500 text-xs mt-2 bg-black/80 px-3 py-1 border border-zinc-800">

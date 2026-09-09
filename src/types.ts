@@ -49,6 +49,13 @@ export interface Objective {
   position: Position;
 }
 
+export interface Upgrades {
+  weaponDamage: number; // level 0-5
+  armorRating: number; // level 0-5
+  visionRange: number; // level 0-5
+  cooldownReduction: number; // level 0-5
+}
+
 export interface GameState {
   helldivers: Helldiver[];
   enemies: Enemy[];
@@ -57,6 +64,8 @@ export interface GameState {
   objectives: Objective[];
   missionTimeLeft: number; // in seconds
   sacrificeScore: number;
+  samples: number; // Currency for upgrades
+  upgrades: Upgrades;
   rating: string;
   stars: number;
   operationName: string;

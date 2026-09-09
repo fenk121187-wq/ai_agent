@@ -7,7 +7,7 @@ export const generateInitialState = (): GameState => {
   return {
     helldivers: [
       { id: 'h1', name: 'K1', position: { x: 500, y: 700 }, health: 100, ammo: 100, isDead: false, isEngaged: false },
-      { id: 'h2', name: 'J2', position: { x: 520, y: 720 }, health: 90, ammo: 80, isDead: false, isEngaged: false },
+      { id: 'h2', name: 'J2', position: { x: 520, y: 720 }, health: 100, ammo: 100, isDead: false, isEngaged: false },
       { id: 'h3', name: 'L3', position: { x: 480, y: 740 }, health: 100, ammo: 100, isDead: false, isEngaged: false },
       { id: 'h4', name: 'P4', position: { x: 550, y: 680 }, health: 100, ammo: 100, isDead: false, isEngaged: false },
     ],
@@ -34,6 +34,13 @@ export const generateInitialState = (): GameState => {
     ],
     missionTimeLeft: 40 * 60, // 40 mins
     sacrificeScore: 0,
+    samples: 0,
+    upgrades: {
+      weaponDamage: 0,
+      armorRating: 0,
+      visionRange: 0,
+      cooldownReduction: 0,
+    },
     rating: 'A',
     stars: 4,
     operationName: 'Operation Valiant Enclosure',

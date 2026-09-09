@@ -21,6 +21,11 @@ export const useGameLoop = () => {
       let newBattlefeedMsgs: string[] = [];
       let justDiedHelldivers = 0;
       let justDiedCivilians = 0;
+      let earnedSamples = 0;
+
+      // Apply Upgrade Modifiers
+      const damageMod = 1 + (next.upgrades.weaponDamage * 0.2); // +20% per level
+      const defenseMod = 1 - (next.upgrades.armorRating * 0.1); // -10% damage taken per level
 
       // Update timer
       next.missionTimeLeft = Math.max(0, next.missionTimeLeft - dt);
@@ -50,7 +55,7 @@ export const useGameLoop = () => {
           next.helldivers.forEach(hd => {
               if (hd.isDead) return;
               if (distance(enemy.position, hd.position) < 50) {
-                  hd.health -= 10 * dt;
+                  hd.health -= (10 * dt) * defenseMod; // Apply armor upgrade
                   if (hd.health <= 0) {
                       hd.health = 0;
                       hd.isDead = true;
@@ -72,11 +77,23 @@ export const useGameLoop = () => {
 
               if (dist < 300) {
                   isEngaged = true;
-                  enemy.health -= 20 * dt;
+                  enemy.health -= (20 * dt) * damageMod; // Apply weapon upgrade
+                  if (enemy.health <= 0) {
+                      // Chance to drop samples on kill
+                      if (Math.random() > 0.6) {
+                          earnedSamples += 1;
+                      }
+                  }
               }
           });
           hd.isEngaged = isEngaged;
       });
+
+      // Passive sample generation (representing automated collection)
+      if (Math.random() < dt * 0.5) { // Roughly 1 every 2 seconds
+          earnedSamples += 1;
+      }
+      next.samples += earnedSamples;
 
       next.enemies = next.enemies.filter(e => e.health > 0);
 
@@ -133,7 +150,6 @@ export const useGameLoop = () => {
               if (d < nearestEnemyDist) nearestEnemyDist = d;
           });
 
-          // If enemy is close, panic and run towards nearest helldiver
           if (nearestEnemyDist < 400) {
               let nearestHd: Position | null = null;
               let nearestHdDist = Infinity;
@@ -150,7 +166,6 @@ export const useGameLoop = () => {
 
               if (nearestHd !== null) {
                   const targetPos: Position = nearestHd;
-                  // Stop right behind helldiver
                   if (nearestHdDist > 20) {
                       const dx = targetPos.x - civ.position.x;
                       const dy = targetPos.y - civ.position.y;

@@ -18,14 +18,14 @@ const ArrowIcon = ({ dir, state }: { dir: ArrowCode, state: 'pending' | 'success
 
   const getColor = () => {
     switch (state) {
-      case 'pending': return 'text-zinc-600 border-zinc-700';
-      case 'success': return 'text-helldiver-gold border-helldiver-gold drop-shadow-[0_0_8px_rgba(255,193,7,0.8)]';
-      case 'fail': return 'text-red-500 border-red-500';
+      case 'pending': return 'text-zinc-600 border-zinc-800 bg-zinc-900/60';
+      case 'success': return 'text-helldiver-cyan border-helldiver-cyan bg-helldiver-cyan/10 drop-shadow-[0_0_8px_rgba(0,240,255,0.8)] shadow-[inset_0_0_10px_rgba(0,240,255,0.2)]';
+      case 'fail': return 'text-red-500 border-red-500 bg-red-500/10 shadow-[0_0_15px_rgba(255,0,0,0.6)]';
     }
   };
 
   return (
-    <div className={`w-14 h-14 flex items-center justify-center border-2 bg-zinc-900/90 ${getColor()} transition-colors duration-75`}>
+    <div className={`w-14 h-14 flex items-center justify-center border-2 backdrop-blur-sm ${getColor()} transition-all duration-150`}>
       <svg className={`w-8 h-8 ${getRotation()}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
       </svg>
@@ -37,27 +37,23 @@ export const StratagemInput: React.FC<StratagemInputProps> = ({ gameState, setGa
   const [activeCode, setActiveCode] = useState<ArrowCode[]>([]);
   const [matchCode, setMatchCode] = useState<ArrowCode[] | null>(null);
   const [failFlash, setFailFlash] = useState(false);
-
-  // Timing window variables
   const [timeRemaining, setTimeRemaining] = useState(100);
   const timerRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (activeCode.length > 0 && !gameState.targetingMode) {
-      // Start or reset interval on active typing
       if (timerRef.current) clearInterval(timerRef.current);
 
       timerRef.current = window.setInterval(() => {
         setTimeRemaining(prev => {
           if (prev <= 2) {
-            // Timeout fail
             setFailFlash(true);
             setTimeout(() => setFailFlash(false), 300);
             setActiveCode([]);
             setMatchCode(null);
             return 100;
           }
-          return prev - 2; // Drains over ~2.5 seconds
+          return prev - 2.5;
         });
       }, 50);
     } else {
@@ -108,25 +104,21 @@ export const StratagemInput: React.FC<StratagemInputProps> = ({ gameState, setGa
         }
 
         if (exactMatch) {
-            // Success! Trigger targeting mode
-            // Bonus points for perfect/fast input could be added here
             setGameState(g => ({
                 ...g,
                 targetingMode: true,
                 activeStratagemId: exactMatch.id,
-                battlefeed: [...g.battlefeed, `${exactMatch.name} coordinates requested...`]
+                battlefeed: [...g.battlefeed, `[SYS] ${exactMatch.name} uplink established. Awaiting coordinates.`]
             }));
             setMatchCode(null);
             return [];
         } else if (!isPrefix) {
-            // Fail!
             setFailFlash(true);
             setTimeout(() => setFailFlash(false), 300);
             setMatchCode(null);
             return [];
         }
 
-        // Reset timer on correct stroke
         setTimeRemaining(100);
         return next;
       });
@@ -144,28 +136,34 @@ export const StratagemInput: React.FC<StratagemInputProps> = ({ gameState, setGa
     : 0;
 
   return (
-    <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none z-50">
+    <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none z-50 font-rajdhani">
 
       {/* Target Code Preview & Stats */}
       {matchCode && (
-        <div className="w-full flex justify-between items-end mb-2 px-2">
-            <span className="text-sm font-bold text-helldiver-gold uppercase tracking-widest bg-black/80 px-3 py-1 rounded">
+        <div className="w-full flex justify-between items-end mb-3 px-1">
+            <span className="text-lg font-bold text-helldiver-cyan uppercase tracking-widest drop-shadow-[0_0_8px_rgba(0,240,255,0.8)]">
               {gameState.stratagems.find(s => s.code === matchCode)?.name || 'UNKNOWN'}
             </span>
-            <span className="text-xs text-helldiver-gold bg-black/80 px-2 py-1 ml-4 rounded font-mono">
+            <span className="text-sm text-helldiver-cyan font-mono tracking-widest bg-black/50 px-2 py-0.5 border border-helldiver-cyan/30">
               SEQ: {successPercentage}%
             </span>
         </div>
       )}
 
       {/* Input Bar Container */}
-      <div className={`relative flex flex-col p-4 bg-zinc-950/90 backdrop-blur border-t-4 shadow-2xl ${failFlash ? 'border-red-500' : matchCode ? 'border-helldiver-gold' : 'border-zinc-800'}`}>
+      <div className={`relative flex flex-col p-5 glass-panel rounded-lg transition-colors duration-150 ${failFlash ? 'border-red-500 shadow-[0_0_30px_rgba(255,0,0,0.5)]' : matchCode ? 'border-helldiver-cyan shadow-[0_0_20px_rgba(0,240,255,0.2)]' : 'border-white/10 shadow-2xl'}`}>
 
-        <div className="flex space-x-2">
+        {/* Tech decorative corners */}
+        <div className="absolute -top-1 -left-1 w-3 h-3 border-t-2 border-l-2 border-white/30"></div>
+        <div className="absolute -top-1 -right-1 w-3 h-3 border-t-2 border-r-2 border-white/30"></div>
+        <div className="absolute -bottom-1 -left-1 w-3 h-3 border-b-2 border-l-2 border-white/30"></div>
+        <div className="absolute -bottom-1 -right-1 w-3 h-3 border-b-2 border-r-2 border-white/30"></div>
+
+        <div className="flex space-x-3">
             {(matchCode || ['UP','RIGHT','DOWN','LEFT'] as ArrowCode[]).map((dir, idx) => {
             if (!matchCode) {
                 if (idx > 3) return null;
-                return <div key={`idle-${idx}`} className="w-14 h-14 border-2 border-zinc-800 bg-zinc-900/50" />;
+                return <div key={`idle-${idx}`} className="w-14 h-14 border-2 border-white/5 bg-black/40 backdrop-blur-sm" />;
             }
             const state = activeCode.length > idx ? 'success' : 'pending';
             return <ArrowIcon key={idx} dir={dir} state={state} />;
@@ -173,14 +171,14 @@ export const StratagemInput: React.FC<StratagemInputProps> = ({ gameState, setGa
         </div>
 
         {/* Timing Window Progress Bar */}
-        {activeCode.length > 0 && !failFlash && (
-            <div className="absolute -bottom-2 left-0 right-0 h-1.5 bg-zinc-800 overflow-hidden">
-               <div
-                  className={`h-full transition-all duration-75 ease-linear ${timeRemaining > 40 ? 'bg-helldiver-gold' : timeRemaining > 20 ? 'bg-helldiver-orange' : 'bg-red-500'}`}
-                  style={{ width: `${timeRemaining}%` }}
-               />
-            </div>
-        )}
+        <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/80 overflow-hidden rounded-b-lg">
+            {activeCode.length > 0 && !failFlash && (
+                <div
+                    className={`h-full transition-all duration-75 ease-linear ${timeRemaining > 50 ? 'bg-helldiver-cyan shadow-[0_0_10px_#00F0FF]' : timeRemaining > 20 ? 'bg-helldiver-orange shadow-[0_0_10px_#FF5E00]' : 'bg-red-500 shadow-[0_0_10px_#ff0000]'}`}
+                    style={{ width: `${timeRemaining}%` }}
+                />
+            )}
+        </div>
       </div>
     </div>
   );
