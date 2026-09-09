@@ -22,11 +22,11 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({ gameState }) => {
 
     // --- RENDER ENTITIES LAYER ---
     ctx.clearRect(0, 0, MAP_WIDTH, MAP_HEIGHT);
-    // Darker, richer background
-    ctx.fillStyle = '#020202';
+    // Dark map background texture base
+    ctx.fillStyle = '#0a0d14';
     ctx.fillRect(0, 0, MAP_WIDTH, MAP_HEIGHT);
 
-    // Engagement Lines (Laser effect)
+    // Engagement Lines (Dashed red laser effect terminating in diamonds)
     gameState.helldivers.forEach(hd => {
         if (hd.isDead) return;
         gameState.enemies.forEach(enemy => {
@@ -34,141 +34,174 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({ gameState }) => {
             const dy = hd.position.y - enemy.position.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
 
-            if (dist < 300) {
+            if (dist < 400) {
                 const pulse = (Math.sin(time / 80) + 1) / 2;
 
                 ctx.beginPath();
                 ctx.moveTo(hd.position.x, hd.position.y);
                 ctx.lineTo(enemy.position.x, enemy.position.y);
 
-                // Neon glow
+                // Red glowing lines
                 ctx.shadowBlur = 10;
-                ctx.shadowColor = '#FF5E00';
-                ctx.strokeStyle = `rgba(255, 94, 0, ${0.4 + pulse * 0.4})`;
-                ctx.lineWidth = 1 + pulse;
+                ctx.shadowColor = 'rgba(255, 50, 50, 0.8)';
+                ctx.strokeStyle = `rgba(255, 50, 50, ${0.4 + pulse * 0.3})`;
+                ctx.lineWidth = 1.5;
 
-                // Animated dashes for laser fire effect
-                ctx.setLineDash([10, 15]);
-                ctx.lineDashOffset = -(time / 20) % 25;
+                // Dashed
+                ctx.setLineDash([8, 12]);
+                ctx.lineDashOffset = -(time / 30) % 20;
                 ctx.stroke();
-
                 ctx.setLineDash([]);
+                ctx.shadowBlur = 0;
+
+                // Diamond at enemy position for connection point
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#ff3333';
+                ctx.fillStyle = '#ff5555';
+                ctx.beginPath();
+                ctx.moveTo(enemy.position.x, enemy.position.y - 6);
+                ctx.lineTo(enemy.position.x + 6, enemy.position.y);
+                ctx.lineTo(enemy.position.x, enemy.position.y + 6);
+                ctx.lineTo(enemy.position.x - 6, enemy.position.y);
+                ctx.closePath();
+                ctx.fill();
                 ctx.shadowBlur = 0;
             }
         });
     });
 
-    // Render Enemies (Glowing Red Triangles)
+    // Render Enemies (Glowing Red Diamonds - visible in fog handled later, but drawn here)
     gameState.enemies.forEach(enemy => {
         if (enemy.health <= 0) return;
 
-        ctx.shadowBlur = 8;
+        ctx.shadowBlur = 12;
         ctx.shadowColor = '#ff0000';
-        ctx.fillStyle = '#ff3333';
+        ctx.fillStyle = '#ff2222';
 
         ctx.beginPath();
-        // Pointing generally towards center for now
-        ctx.moveTo(enemy.position.x, enemy.position.y - 6);
-        ctx.lineTo(enemy.position.x + 5, enemy.position.y + 5);
-        ctx.lineTo(enemy.position.x - 5, enemy.position.y + 5);
+        ctx.moveTo(enemy.position.x, enemy.position.y - 8);
+        ctx.lineTo(enemy.position.x + 8, enemy.position.y);
+        ctx.lineTo(enemy.position.x, enemy.position.y + 8);
+        ctx.lineTo(enemy.position.x - 8, enemy.position.y);
         ctx.closePath();
         ctx.fill();
+
+        // Inner bright core
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.moveTo(enemy.position.x, enemy.position.y - 3);
+        ctx.lineTo(enemy.position.x + 3, enemy.position.y);
+        ctx.lineTo(enemy.position.x, enemy.position.y + 3);
+        ctx.lineTo(enemy.position.x - 3, enemy.position.y);
+        ctx.closePath();
+        ctx.fill();
+
         ctx.shadowBlur = 0;
     });
 
     // Render Civilians (White glowing dots)
     gameState.civilians.forEach(civ => {
-        if (civ.isDead) {
-            ctx.fillStyle = '#222';
-            ctx.shadowBlur = 0;
-        } else {
-            ctx.fillStyle = '#ffffff';
-            ctx.shadowBlur = 5;
-            ctx.shadowColor = '#ffffff';
-        }
+        if (civ.isDead) return;
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = '#ffffff';
         ctx.beginPath();
-        ctx.arc(civ.position.x, civ.position.y, 3, 0, Math.PI * 2);
+        ctx.arc(civ.position.x, civ.position.y, 2.5, 0, Math.PI * 2);
         ctx.fill();
         ctx.shadowBlur = 0;
     });
 
-    // Render Helldivers (Advanced Chevron)
+
+    // Draw the Central Yellow Crosshair/Radar (Decorative overlay)
+    const centerX = MAP_WIDTH / 2;
+    const centerY = MAP_HEIGHT * 0.7; // Lower center
+
+    ctx.strokeStyle = 'rgba(255, 193, 7, 0.2)'; // Faint Helldiver gold
+    ctx.lineWidth = 1;
+    ctx.shadowBlur = 0;
+
+    // Concentric rings
+    for(let r=50; r<=200; r+=50) {
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, r, 0, Math.PI*2);
+        ctx.stroke();
+    }
+    // Cross lines
+    ctx.beginPath();
+    ctx.moveTo(centerX - 220, centerY);
+    ctx.lineTo(centerX + 220, centerY);
+    ctx.moveTo(centerX, centerY - 220);
+    ctx.lineTo(centerX, centerY + 220);
+    ctx.stroke();
+
+
+    // Render Helldivers
     gameState.helldivers.forEach(hd => {
-      if (hd.isDead) {
-          ctx.fillStyle = '#333';
-          ctx.beginPath();
-          ctx.arc(hd.position.x, hd.position.y, 6, 0, Math.PI * 2);
-          ctx.fill();
-          return;
-      }
+      if (hd.isDead) return;
 
-      // Glow based on engagement
-      ctx.shadowBlur = hd.isEngaged ? 15 : 8;
-      ctx.shadowColor = hd.isEngaged ? '#FF5E00' : '#00F0FF';
-      ctx.fillStyle = '#00F0FF';
+      // Hexagon icon background
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = '#0088ff';
+      ctx.strokeStyle = '#00bfff';
+      ctx.lineWidth = 2;
+      ctx.fillStyle = 'rgba(0, 191, 255, 0.1)';
 
-      // Draw Chevron
+      const size = 14;
       ctx.beginPath();
-      ctx.moveTo(hd.position.x, hd.position.y - 10);
-      ctx.lineTo(hd.position.x + 8, hd.position.y + 6);
-      ctx.lineTo(hd.position.x, hd.position.y + 2);
-      ctx.lineTo(hd.position.x - 8, hd.position.y + 6);
+      for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI / 3) * i - Math.PI/2;
+        const x = hd.position.x + size * Math.cos(angle);
+        const y = hd.position.y + size * Math.sin(angle);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
       ctx.closePath();
       ctx.fill();
+      ctx.stroke();
 
-      // Draw engaged indicator ring
-      if (hd.isEngaged) {
-          const pulse = (Math.sin(time / 100) + 1) / 2;
-          ctx.strokeStyle = '#FF5E00';
-          ctx.lineWidth = 1.5;
-          ctx.beginPath();
-          ctx.arc(hd.position.x, hd.position.y, 16 + pulse * 4, 0, Math.PI * 2);
-          ctx.stroke();
-      }
-
+      // Inner dot/icon
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowBlur = 5;
+      ctx.beginPath();
+      ctx.arc(hd.position.x, hd.position.y, 4, 0, Math.PI * 2);
+      ctx.fill();
       ctx.shadowBlur = 0;
 
-      // Draw Name tag
-      ctx.fillStyle = '#FFC107';
-      ctx.font = 'bold 12px "Share Tech Mono"';
+      // Draw Name tag (H-1 HELLDIVER)
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 12px "Rajdhani", sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(hd.name, hd.position.x, hd.position.y - 15);
+
+      const parts = hd.name.split(' ');
+      ctx.fillText(parts[0], hd.position.x, hd.position.y - 35);
+      if (parts[1]) {
+        ctx.fillText(parts[1], hd.position.x, hd.position.y - 20);
+      }
     });
 
     // --- RENDER FOG OF WAR LAYER ---
     fowCtx.globalCompositeOperation = 'source-over';
     fowCtx.clearRect(0, 0, MAP_WIDTH, MAP_HEIGHT);
-    fowCtx.fillStyle = 'rgba(0, 0, 0, 1)'; // Completely opaque
+
+    // Create a smoky/cloudy background look by layering some opacity (simplified)
+    fowCtx.fillStyle = 'rgba(10, 15, 20, 0.95)';
     fowCtx.fillRect(0, 0, MAP_WIDTH, MAP_HEIGHT);
 
     fowCtx.globalCompositeOperation = 'destination-out';
 
     gameState.helldivers.forEach(hd => {
-        // Base vision from upgrades
-        let visionRadius = 400 + (gameState.upgrades.visionRange * 50);
+        let visionRadius = 250; // Defined blue radius
 
-        if (hd.isEngaged) {
-            visionRadius += 50 + Math.sin(time / 50) * 20;
-        }
-
-        if (hd.isDead && hd.timeOfDeath) {
-            const timeSinceDeath = time - hd.timeOfDeath;
-            const shrinkTime = 8000;
-            if (timeSinceDeath < shrinkTime) {
-                visionRadius = (400 + (gameState.upgrades.visionRange * 50)) * (1 - timeSinceDeath / shrinkTime);
-            } else {
-                visionRadius = 0;
-            }
-        }
+        if (hd.isDead) return; // Immediate snap off for simplicity, or keep shrink logic if desired
 
         if (visionRadius > 0) {
+            // Cut out the fog
             const gradient = fowCtx.createRadialGradient(
                 hd.position.x, hd.position.y, 50,
                 hd.position.x, hd.position.y, visionRadius
             );
-            // Softer gradient for AAA feel
             gradient.addColorStop(0, 'rgba(0, 0, 0, 1)');
-            gradient.addColorStop(0.6, 'rgba(0, 0, 0, 0.9)');
+            gradient.addColorStop(0.7, 'rgba(0, 0, 0, 0.8)');
             gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
             fowCtx.fillStyle = gradient;
@@ -177,6 +210,26 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({ gameState }) => {
             fowCtx.fill();
         }
     });
+
+    // Add blue edge glow to the cutouts by drawing over them on the main canvas
+    ctx.globalCompositeOperation = 'screen';
+    gameState.helldivers.forEach(hd => {
+        if (hd.isDead) return;
+        const gradient = ctx.createRadialGradient(
+            hd.position.x, hd.position.y, 180,
+            hd.position.x, hd.position.y, 250
+        );
+        gradient.addColorStop(0, 'rgba(0, 150, 255, 0)');
+        gradient.addColorStop(0.8, 'rgba(0, 150, 255, 0.15)');
+        gradient.addColorStop(1, 'rgba(0, 150, 255, 0)');
+
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(hd.position.x, hd.position.y, 250, 0, Math.PI*2);
+        ctx.fill();
+    });
+    ctx.globalCompositeOperation = 'source-over';
+
 
     // --- TARGETING RETICLE OVERLAY ---
     if (gameState.targetingMode) {
@@ -219,20 +272,25 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({ gameState }) => {
   }, [gameState]);
 
   return (
-    <div className="absolute inset-0 overflow-hidden bg-black flex items-center justify-center">
-      <div className="relative" style={{ width: MAP_WIDTH, height: MAP_HEIGHT, transform: 'scale(0.8)' }}>
-        <canvas
-          ref={canvasRef}
-          width={MAP_WIDTH}
-          height={MAP_HEIGHT}
-          className="absolute inset-0 z-0 mix-blend-screen"
-        />
-        <canvas
-          ref={fowCanvasRef}
-          width={MAP_WIDTH}
-          height={MAP_HEIGHT}
-          className="absolute inset-0 z-10 pointer-events-none"
-        />
+    <div className="absolute inset-0 overflow-hidden bg-zinc-950 flex items-center justify-center pointer-events-none">
+      <div className="relative w-full h-full">
+        {/* Background smoky texture simulation */}
+        <div className="absolute inset-0 bg-cover bg-center opacity-30" style={{ backgroundImage: 'radial-gradient(circle at center, transparent 0%, #000 100%)' }} />
+
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" style={{ width: MAP_WIDTH, height: MAP_HEIGHT, transform: 'scale(1)' }}>
+            <canvas
+            ref={canvasRef}
+            width={MAP_WIDTH}
+            height={MAP_HEIGHT}
+            className="absolute inset-0 z-0 mix-blend-screen"
+            />
+            <canvas
+            ref={fowCanvasRef}
+            width={MAP_WIDTH}
+            height={MAP_HEIGHT}
+            className="absolute inset-0 z-10 pointer-events-none"
+            />
+        </div>
       </div>
     </div>
   );

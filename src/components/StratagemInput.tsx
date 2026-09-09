@@ -6,7 +6,7 @@ interface StratagemInputProps {
   setGameState: React.Dispatch<React.SetStateAction<GameState>>;
 }
 
-const ArrowIcon = ({ dir, state }: { dir: ArrowCode, state: 'pending' | 'success' | 'fail' }) => {
+const ArrowIcon = ({ dir, state }: { dir: ArrowCode, state: 'pending' | 'success' | 'fail' | 'idle' }) => {
   const getRotation = () => {
     switch (dir) {
       case 'UP': return 'rotate-0';
@@ -18,15 +18,16 @@ const ArrowIcon = ({ dir, state }: { dir: ArrowCode, state: 'pending' | 'success
 
   const getColor = () => {
     switch (state) {
-      case 'pending': return 'text-zinc-600 border-zinc-800 bg-zinc-900/60';
-      case 'success': return 'text-helldiver-cyan border-helldiver-cyan bg-helldiver-cyan/10 drop-shadow-[0_0_8px_rgba(0,240,255,0.8)] shadow-[inset_0_0_10px_rgba(0,240,255,0.2)]';
+      case 'idle': return 'text-zinc-500/30 border-zinc-500/20 bg-black/40';
+      case 'pending': return 'text-helldiver-orange/40 border-helldiver-orange/30 bg-black/60';
+      case 'success': return 'text-helldiver-orange border-helldiver-orange bg-helldiver-orange/10 drop-shadow-[0_0_8px_rgba(255,153,0,0.8)] shadow-[inset_0_0_10px_rgba(255,153,0,0.2)]';
       case 'fail': return 'text-red-500 border-red-500 bg-red-500/10 shadow-[0_0_15px_rgba(255,0,0,0.6)]';
     }
   };
 
   return (
-    <div className={`w-14 h-14 flex items-center justify-center border-2 backdrop-blur-sm ${getColor()} transition-all duration-150`}>
-      <svg className={`w-8 h-8 ${getRotation()}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+    <div className={`w-14 h-16 flex items-center justify-center border-2 ${getColor()} transition-all duration-150 rounded-sm`}>
+      <svg className={`w-10 h-10 ${getRotation()}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
       </svg>
     </div>
@@ -133,53 +134,80 @@ export const StratagemInput: React.FC<StratagemInputProps> = ({ gameState, setGa
 
   const successPercentage = matchCode
     ? Math.round((activeCode.length / matchCode.length) * 100)
-    : 0;
+    : 82; // Default decorative percentage
+
+  const circumference = 2 * Math.PI * 20;
+  const strokeDashoffset = circumference - (timeRemaining / 100) * circumference;
 
   return (
-    <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none z-50 font-rajdhani">
+    <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col z-50 pointer-events-none font-rajdhani">
 
-      {/* Target Code Preview & Stats */}
-      {matchCode && (
-        <div className="w-full flex justify-between items-end mb-3 px-1">
-            <span className="text-lg font-bold text-helldiver-cyan uppercase tracking-widest drop-shadow-[0_0_8px_rgba(0,240,255,0.8)]">
-              {gameState.stratagems.find(s => s.code === matchCode)?.name || 'UNKNOWN'}
-            </span>
-            <span className="text-sm text-helldiver-cyan font-mono tracking-widest bg-black/50 px-2 py-0.5 border border-helldiver-cyan/30">
-              SEQ: {successPercentage}%
-            </span>
-        </div>
-      )}
+      <div className="tech-panel">
+        <div className="tech-panel-inner p-4 pb-3 flex flex-col">
 
-      {/* Input Bar Container */}
-      <div className={`relative flex flex-col p-5 glass-panel rounded-lg transition-colors duration-150 ${failFlash ? 'border-red-500 shadow-[0_0_30px_rgba(255,0,0,0.5)]' : matchCode ? 'border-helldiver-cyan shadow-[0_0_20px_rgba(0,240,255,0.2)]' : 'border-white/10 shadow-2xl'}`}>
+            {/* Header */}
+            <div className="flex justify-between items-center mb-3">
+                <div className="flex flex-col">
+                    <span className="text-helldiver-orange font-bold uppercase tracking-widest text-sm">STRATAGEM INPUT</span>
+                    <span className="text-zinc-400 uppercase tracking-widest text-[10px]">ENTER DIRECTIONAL SEQUENCE</span>
+                </div>
+                <span className="text-helldiver-orange uppercase tracking-widest text-[10px] font-bold">TIMING</span>
+            </div>
 
-        {/* Tech decorative corners */}
-        <div className="absolute -top-1 -left-1 w-3 h-3 border-t-2 border-l-2 border-white/30"></div>
-        <div className="absolute -top-1 -right-1 w-3 h-3 border-t-2 border-r-2 border-white/30"></div>
-        <div className="absolute -bottom-1 -left-1 w-3 h-3 border-b-2 border-l-2 border-white/30"></div>
-        <div className="absolute -bottom-1 -right-1 w-3 h-3 border-b-2 border-r-2 border-white/30"></div>
+            <div className="flex items-center space-x-6">
 
-        <div className="flex space-x-3">
-            {(matchCode || ['UP','RIGHT','DOWN','LEFT'] as ArrowCode[]).map((dir, idx) => {
-            if (!matchCode) {
-                if (idx > 3) return null;
-                return <div key={`idle-${idx}`} className="w-14 h-14 border-2 border-white/5 bg-black/40 backdrop-blur-sm" />;
-            }
-            const state = activeCode.length > idx ? 'success' : 'pending';
-            return <ArrowIcon key={idx} dir={dir} state={state} />;
-            })}
-        </div>
+                {/* Arrow Sequence */}
+                <div className={`flex space-x-2 transition-colors duration-150 ${failFlash ? 'drop-shadow-[0_0_10px_rgba(255,0,0,0.8)]' : ''}`}>
+                    {(matchCode || ['UP','RIGHT','DOWN','DOWN','LEFT','RIGHT'] as ArrowCode[]).map((dir, idx) => {
+                        let state: 'idle' | 'pending' | 'success' | 'fail' = 'idle';
+                        if (matchCode) {
+                            if (failFlash) state = 'fail';
+                            else state = activeCode.length > idx ? 'success' : 'pending';
+                        }
+                        return <ArrowIcon key={idx} dir={dir} state={state} />;
+                    })}
+                </div>
 
-        {/* Timing Window Progress Bar */}
-        <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/80 overflow-hidden rounded-b-lg">
-            {activeCode.length > 0 && !failFlash && (
-                <div
-                    className={`h-full transition-all duration-75 ease-linear ${timeRemaining > 50 ? 'bg-helldiver-cyan shadow-[0_0_10px_#00F0FF]' : timeRemaining > 20 ? 'bg-helldiver-orange shadow-[0_0_10px_#FF5E00]' : 'bg-red-500 shadow-[0_0_10px_#ff0000]'}`}
-                    style={{ width: `${timeRemaining}%` }}
-                />
-            )}
+                {/* Timing Circle Ring */}
+                <div className="relative w-16 h-16 flex items-center justify-center">
+                    <svg className="absolute w-full h-full transform -rotate-90">
+                        {/* Background ring */}
+                        <circle cx="32" cy="32" r="20" className="stroke-zinc-800" strokeWidth="4" fill="none" />
+                        {/* Progress ring */}
+                        <circle
+                            cx="32" cy="32" r="20"
+                            className={`${activeCode.length > 0 && !failFlash ? 'stroke-helldiver-orange drop-shadow-[0_0_5px_#FF9900]' : 'stroke-helldiver-orange/30'}`}
+                            strokeWidth="4" fill="none"
+                            strokeDasharray={circumference}
+                            strokeDashoffset={activeCode.length > 0 ? strokeDashoffset : 0}
+                            strokeLinecap="round"
+                        />
+                    </svg>
+                    <div className="flex flex-col items-center justify-center absolute">
+                        <span className="text-helldiver-orange font-mono font-bold text-lg leading-none">{successPercentage}%</span>
+                        <span className="text-zinc-400 text-[6px] uppercase tracking-widest leading-none mt-1">WINDOW OPEN</span>
+                    </div>
+                </div>
+
+            </div>
+
+            {/* Input Progress Bar */}
+            <div className="flex items-center mt-4 space-x-3 w-full">
+                <span className="text-helldiver-orange text-[10px] uppercase font-bold tracking-widest">INPUT PROGRESS</span>
+                <div className="flex-1 h-3 border border-helldiver-orange/40 bg-black/60 p-[2px]">
+                    <div
+                        className="h-full bg-gradient-to-r from-helldiver-orange to-helldiver-gold shadow-[0_0_5px_rgba(255,153,0,0.5)] transition-all duration-100"
+                        style={{ width: matchCode ? `${(activeCode.length / matchCode.length) * 100}%` : '80%' }}
+                    ></div>
+                </div>
+                <span className="text-zinc-400 font-mono text-sm">
+                    {matchCode ? `${activeCode.length} / ${matchCode.length}` : '4 / 6'}
+                </span>
+            </div>
+
         </div>
       </div>
+
     </div>
   );
 };

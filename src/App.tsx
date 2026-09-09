@@ -5,8 +5,6 @@ import { TopBar } from './components/TopBar';
 import { LeftPanel } from './components/LeftPanel';
 import { RightPanel } from './components/RightPanel';
 import { StratagemInput } from './components/StratagemInput';
-import { UpgradesPanel } from './components/UpgradesPanel';
-
 const App: React.FC = () => {
   const { gameState, setGameState } = useGameLoop();
 
@@ -94,11 +92,31 @@ const App: React.FC = () => {
 
       <MapCanvas gameState={gameState} />
 
+
+      {/* Top Header Text Strip */}
+      <div className="absolute top-4 left-6 z-50 pointer-events-none flex flex-col">
+        <h1 className="text-4xl font-black text-zinc-100 tracking-tighter drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">HELLDIVERS</h1>
+        <h2 className="text-xs text-zinc-400 font-bold uppercase tracking-[0.3em] pl-1">TACTICAL COMMAND</h2>
+      </div>
+
       <TopBar gameState={gameState} />
       <LeftPanel gameState={gameState} />
-      <UpgradesPanel gameState={gameState} setGameState={setGameState} />
       <RightPanel gameState={gameState} />
       <StratagemInput gameState={gameState} setGameState={setGameState} />
+
+      {/* Bottom Footer Text Strip */}
+      <div className="absolute bottom-3 left-0 w-full px-6 flex justify-between text-[10px] text-zinc-500 font-bold uppercase tracking-widest z-50 pointer-events-none">
+        <span>PRESS [X] TO CANCEL</span>
+        <span className="ml-24">HELLDIVERS TACNET V2.6.1</span>
+        <span className="flex items-center space-x-2">
+          <span>SECURE UPLINK: STRONG</span>
+          <div className="flex items-end space-x-0.5 h-3">
+             <div className="w-1 bg-green-600 h-1"></div>
+             <div className="w-1 bg-green-500 h-2"></div>
+             <div className="w-1 bg-green-400 h-3"></div>
+          </div>
+        </span>
+      </div>
 
       {gameState.targetingMode && (
           <div className="absolute bottom-24 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none z-50">

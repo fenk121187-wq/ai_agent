@@ -24,3 +24,33 @@
 .glass-panel {
   @apply bg-zinc-950/60 backdrop-blur-md border border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.5)];
 }
+
+.tech-panel {
+  @apply bg-black/80 backdrop-blur-md border border-helldiver-orange/40 relative;
+  clip-path: polygon(
+    10px 0,
+    100% 0,
+    100% calc(100% - 10px),
+    calc(100% - 10px) 100%,
+    0 100%,
+    0 10px
+  );
+}
+
+.tech-panel-inner {
+  @apply w-full h-full p-4 relative;
+}
+
+/* Custom scrollbar for battlefeed */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 153, 0, 0.3);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 153, 0, 0.6);
+}
